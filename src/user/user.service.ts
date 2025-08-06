@@ -55,7 +55,6 @@ export class UserService {
       );
     }
 
-
     const matchPassword = await compare(loginUserDto.password, user.password);
     if (!matchPassword) {
       throw new HttpException(
@@ -67,6 +66,23 @@ export class UserService {
     delete user.password;
 
     return this.generateUserResponse(user);
+  }
+
+  async findById(id: number): Promise<UserEntity> {
+    const user = await this.userRepositry.findOne({
+      where: {
+        id,
+      },
+    });
+
+    if (!user) {
+      throw new HttpException(
+        `User with ID ${id} not found`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    return user;
   }
 
   generateToken(user: UserEntity): string {

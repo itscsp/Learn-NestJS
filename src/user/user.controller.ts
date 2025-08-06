@@ -5,12 +5,14 @@ import { UserService } from '@/src/user/user.service';
 import {
   Body,
   Controller,
+  Get,
   Post,
+  Req,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 
-@Controller('users')
+@Controller()
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -22,11 +24,16 @@ export class UserController {
     return await this.userService.createUser(createUserDto);
   }
 
-  @Post('login')
+  @Post('user/login')
   @UsePipes(new ValidationPipe())
   async loginUser(
     @Body('user') loginUserDto: LoginUserDto,
   ): Promise<IUserInterface> {
     return await this.userService.loginUser(loginUserDto);
+  }
+
+  @Get('user')
+  async getCurrentUser(@Req() request: Request): Promise<IUserInterface> {
+    return 'Get current user updateds' as any;
   }
 }
