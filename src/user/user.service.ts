@@ -97,10 +97,6 @@ export class UserService {
   }
 
   generateUserResponse(user: UserEntity): IUserInterface {
-    
-    if (!user.id) {
-      throw new HttpException(`User data is missing`, HttpStatus.BAD_REQUEST);
-    }
     return {
       user: {
         ...user,
