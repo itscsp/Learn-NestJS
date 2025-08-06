@@ -7,7 +7,7 @@ const config: PostgresConnectionOptions = {
   database: 'blog',
   username: 'devuser',
   password: '12345',
-  entities: [__dirname + '**/*.entity.{.ts, .js}'],
+  entities: [__dirname + '/**/*.entity{.ts,.js}'],
   synchronize: true, //Don't use this in Prod
 };
 
