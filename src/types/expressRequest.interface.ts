@@ -2,5 +2,5 @@ import { UserEntity } from '@/src/user/user.entity';
 import { Request } from 'express';
 
 export interface AuthRequest extends Request {
-  user?: UserEntity | null;
+  user: UserEntity;
 }

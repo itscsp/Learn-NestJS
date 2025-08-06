@@ -1,3 +1,4 @@
+import type { AuthRequest } from '@/src/types/expressRequest.interface';
 import { CreateUserDto } from '@/src/user/dto/createUser.dto';
 import { LoginUserDto } from '@/src/user/dto/loginUser.dto';
 import { IUserInterface } from '@/src/user/types/userResponse.interface';
@@ -33,7 +34,7 @@ export class UserController {
   }
 
   @Get('user')
-  async getCurrentUser(@Req() request: Request): Promise<IUserInterface> {
-    return 'Get current user updateds' as any;
+  async getCurrentUser(@Req() request: AuthRequest): Promise<IUserInterface> {
+    return this.userService.generateUserResponse(request.user)
   }
 }
