@@ -2,6 +2,7 @@ import type { AuthRequest } from '@/src/types/expressRequest.interface';
 import { User } from '@/src/user/decorators/user.decorators';
 import { CreateUserDto } from '@/src/user/dto/createUser.dto';
 import { LoginUserDto } from '@/src/user/dto/loginUser.dto';
+import { UpdateUserDto } from '@/src/user/dto/updateUser.dto';
 import { AuthGuard } from '@/src/user/guards/auth.guard';
 import { IUserInterface } from '@/src/user/types/userResponse.interface';
 import { UserService } from '@/src/user/user.service';
@@ -10,6 +11,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -20,7 +22,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @UsePipes(new ValidationPipe())
-  @Post()
+  @Post('user')
   async createUser(
     @Body('user') createUserDto: CreateUserDto,
   ): Promise<IUserInterface> {
@@ -33,6 +35,19 @@ export class UserController {
     @Body('user') loginUserDto: LoginUserDto,
   ): Promise<IUserInterface> {
     return await this.userService.loginUser(loginUserDto);
+  }
+
+  @Put('user')
+  @UseGuards(AuthGuard)
+  async updateUser(
+    @User('id') userId: number,
+    @Body('user') updateUserDto: UpdateUserDto,
+  ): Promise<IUserInterface> {
+    const updartedUser = await this.userService.updateUser(
+      userId,
+      updateUserDto,
+    );
+    return this.userService.generateUserResponse(updartedUser);
   }
 
   @Get('user')
