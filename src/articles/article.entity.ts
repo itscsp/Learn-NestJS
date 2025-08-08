@@ -1,4 +1,11 @@
-import { BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { UserEntity } from '../user/user.entity';
+import {
+  BeforeUpdate,
+  Column,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity({ name: 'articles' })
 export class ArticleEntity {
@@ -8,17 +15,17 @@ export class ArticleEntity {
   @Column()
   slug: string;
 
-  @Column()
+  @Column({ default: '' })
   description: string;
 
-  @Column()
+  @Column({ default: '' })
   body: string;
 
-  @Column()
+  @Column({ default: '' })
   title: string;
 
   @Column('simple-array')
-  tagList: string;
+  tagList: string[];
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
@@ -28,6 +35,9 @@ export class ArticleEntity {
 
   @Column({ default: 0 })
   favoriteContent: number;
+
+  @ManyToOne(() => UserEntity, (user) => user.articles)
+  author: UserEntity;
 
   @BeforeUpdate()
   updateTimestap() {
