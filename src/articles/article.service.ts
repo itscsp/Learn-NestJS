@@ -4,7 +4,7 @@ import { IArticleResponse } from '@/src/articles/types/articleResponse.interface
 import { UserEntity } from '@/src/user/user.entity';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeleteResult, Repository } from 'typeorm';
 import slugify from 'slugify';
 
 @Injectable()
@@ -31,6 +31,23 @@ export class ArticleServices {
   }
 
   async getSingleArticle(slug: string): Promise<ArticleEntity> {
+  return await this.findBySlug(slug);
+  }
+
+  async deleteArticle(
+    slug: string,
+    currentUserId: number,
+  ): Promise<DeleteResult> {
+    const article = await this.findBySlug(slug);
+
+    if (article.author.id !== currentUserId) {
+      throw new HttpException('Your Not Authorized', HttpStatus.UNAUTHORIZED);
+    }
+
+    return await this.articleRepository.delete({ slug });
+  }
+
+  async findBySlug(slug: string): Promise<ArticleEntity> {
     const article = await this.articleRepository.findOne({
       where: {
         slug,
