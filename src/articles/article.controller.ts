@@ -1,4 +1,3 @@
-
 import { ArticleServices } from '@/src/articles/article.service';
 import { CreateArticleDto } from '@/src/articles/dto/createArticle.dto';
 import { UpdateArticleDto } from '@/src/articles/dto/updateArticle.dto';
@@ -14,6 +13,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -67,5 +67,10 @@ export class ArticleController {
     );
 
     return this.articleService.generateArticleResponse(updateArticle);
+  }
+
+  @Get()
+  async findAll(@Query() query: any): Promise<any> {
+    return await this.articleService.findAll(query);
   }
 }
