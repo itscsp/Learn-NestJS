@@ -6,6 +6,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, Repository } from 'typeorm';
 import slugify from 'slugify';
+import { UpdateArticleDto } from '@/src/articles/dto/updateArticle.dto';
 
 @Injectable()
 export class ArticleServices {
@@ -31,7 +32,7 @@ export class ArticleServices {
   }
 
   async getSingleArticle(slug: string): Promise<ArticleEntity> {
-  return await this.findBySlug(slug);
+    return await this.findBySlug(slug);
   }
 
   async deleteArticle(
@@ -59,6 +60,26 @@ export class ArticleServices {
     }
 
     return article;
+  }
+
+  async updateArticle(
+    slug: string,
+    currentUserId: number,
+    updateArticleDto: UpdateArticleDto,
+  ): Promise<ArticleEntity> {
+    const article = await this.findBySlug(slug);
+
+    if (article.author.id !== currentUserId) {
+      throw new HttpException('Your Not Authorized', HttpStatus.UNAUTHORIZED);
+    }
+
+    if (updateArticleDto.title) {
+      article.slug = this.generateSlug(updateArticleDto.title);
+    }
+
+    Object.assign(article, updateArticleDto);
+
+    return await this.articleRepository.save(article);
   }
 
   generateSlug(title: string): string {
