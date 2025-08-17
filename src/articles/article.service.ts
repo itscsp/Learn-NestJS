@@ -21,8 +21,9 @@ export class ArticleServices {
   async findAll(query: {
     tag?: string;
     author?: string;
-    limit?: number;
-    offset?: number;
+    favorited?: string;
+    limit?: number | string;
+    offset?: number | string;
   }): Promise<ArticlesResponse> {
     const queryBuilder = this.articleRepository
       .createQueryBuilder('articles')
@@ -50,15 +51,42 @@ export class ArticleServices {
       });
     }
 
+    if (query.favorited) {
+      const favoriter = await this.userRepositry.findOne({
+        where: { username: query.favorited },
+        relations: ['favorites'],
+      });
+
+      if (
+        !favoriter ||
+        !favoriter.favorites ||
+        favoriter.favorites.length === 0
+      ) {
+        return { articles: [], articleCount: 0 };
+      }
+
+      const favoritesIds = favoriter.favorites.map((a) => a.id);
+      queryBuilder.andWhere('articles.id IN (:...ids)', { ids: favoritesIds });
+    }
+
     queryBuilder.orderBy('articles.createdAt', 'DESC');
     const articleCount = await queryBuilder.getCount();
 
-    if (query.limit) {
-      queryBuilder.limit(query.limit);
+    const limit =
+      query.limit !== undefined && query.limit !== null
+        ? Number(query.limit)
+        : undefined;
+    const offset =
+      query.offset !== undefined && query.offset !== null
+        ? Number(query.offset)
+        : undefined;
+
+    if (typeof limit === 'number' && !Number.isNaN(limit)) {
+      queryBuilder.limit(limit);
     }
 
-    if (query.offset) {
-      queryBuilder.offset(query.offset);
+    if (typeof offset === 'number' && !Number.isNaN(offset)) {
+      queryBuilder.offset(offset);
     }
 
     const articles = await queryBuilder.getMany();
@@ -174,9 +202,13 @@ export class ArticleServices {
 
     const article = await this.findBySlug(slug);
 
-    const isFavorite = (user.favorites || []).some((fav) => fav.id === article.id);
+    const isFavorite = (user.favorites || []).some(
+      (fav) => fav.id === article.id,
+    );
     if (isFavorite) {
-      user.favorites = (user.favorites || []).filter((fav) => fav.id !== article.id);
+      user.favorites = (user.favorites || []).filter(
+        (fav) => fav.id !== article.id,
+      );
       await this.userRepositry.save(user);
 
       article.favoriteCount = Math.max(0, (article.favoriteCount || 0) - 1);

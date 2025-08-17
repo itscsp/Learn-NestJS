@@ -90,6 +90,9 @@ export class ArticleController {
     @User('id') currentUserId: number,
     @Param('slug') slug: string,
   ) {
-    return await this.articleService.removeFromFavoriteArticle(currentUserId, slug);
+    return await this.articleService.removeFromFavoriteArticle(
+      currentUserId,
+      slug,
+    );
   }
 }
