@@ -7,6 +7,7 @@ import ormconfig from './ormconfig';
 import { UsetModule } from '@/src/user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { ArticleModule } from '@/src/articles/article.module';
+import { ProfileModule } from '@/src/profile/profile.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ArticleModule } from '@/src/articles/article.module';
     TagModule,
     UsetModule,
     ArticleModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [AppService],
