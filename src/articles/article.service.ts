@@ -18,13 +18,16 @@ export class ArticleServices {
     private readonly userRepositry: Repository<UserEntity>,
   ) {}
 
-  async findAll(query: {
-    tag?: string;
-    author?: string;
-    favorited?: string;
-    limit?: number | string;
-    offset?: number | string;
-  }): Promise<ArticlesResponse> {
+  async findAll(
+    query: {
+      tag?: string;
+      author?: string;
+      favorited?: string;
+      limit?: number | string;
+      offset?: number | string;
+    },
+    currentUserId?: number,
+  ): Promise<ArticlesResponse> {
     const queryBuilder = this.articleRepository
       .createQueryBuilder('articles')
       .leftJoinAndSelect('articles.author', 'author');
@@ -91,8 +94,28 @@ export class ArticleServices {
 
     const articles = await queryBuilder.getMany();
 
+    let userFavoritesIds: number[] = [];
+
+    if (currentUserId) {
+      const currentUser = await this.userRepositry.findOne({
+        where: {
+          id: currentUserId,
+        },
+        relations: ['favorites'],
+      });
+
+      if (currentUser) {
+        userFavoritesIds = currentUser?.favorites.map((article) => article.id);
+      }
+    }
+
+    const articleWithFavorited = articles.map((article) => {
+      const favorited = userFavoritesIds.includes(article.id);
+      return { ...article, favorited };
+    });
+
     return {
-      articles,
+      articles: articleWithFavorited,
       articleCount,
     };
   }

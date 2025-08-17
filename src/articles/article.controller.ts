@@ -71,8 +71,18 @@ export class ArticleController {
   }
 
   @Get()
-  async findAll(@Query() query: any): Promise<ArticlesResponse> {
-    return await this.articleService.findAll(query);
+  async findAll(
+    @User('id') currentUserId: number,
+    @Query()
+    query: {
+      tag?: string;
+      author?: string;
+      favorited?: string;
+      limit?: number | string;
+      offset?: number | string;
+    },
+  ): Promise<ArticlesResponse> {
+    return await this.articleService.findAll(query, currentUserId);
   }
 
   @Post(':slug/favorites')
