@@ -34,7 +34,7 @@ export class ArticleEntity {
   updatedAt: Date;
 
   @Column({ default: 0 })
-  favoriteContent: number;
+  favoriteCount: number;
 
   @ManyToOne(() => UserEntity, (user) => user.articles, { eager: true })
   author: UserEntity;

@@ -2,6 +2,7 @@ import { ArticleServices } from '@/src/articles/article.service';
 import { CreateArticleDto } from '@/src/articles/dto/createArticle.dto';
 import { UpdateArticleDto } from '@/src/articles/dto/updateArticle.dto';
 import { IArticleResponse } from '@/src/articles/types/articleResponse.interface';
+import { ArticlesResponse } from '@/src/articles/types/articlesResponse.interface';
 import { User } from '@/src/user/decorators/user.decorators';
 import { AuthGuard } from '@/src/user/guards/auth.guard';
 import { UserEntity } from '@/src/user/user.entity';
@@ -70,7 +71,25 @@ export class ArticleController {
   }
 
   @Get()
-  async findAll(@Query() query: any): Promise<any> {
+  async findAll(@Query() query: any): Promise<ArticlesResponse> {
     return await this.articleService.findAll(query);
+  }
+
+  @Post(':slug/favorites')
+  @UseGuards(AuthGuard)
+  async addToFavoriteArticle(
+    @User('id') currentUserId: number,
+    @Param('slug') slug: string,
+  ) {
+    return await this.articleService.addToFavoriteArticle(currentUserId, slug);
+  }
+
+  @Delete(':slug/favorites')
+  @UseGuards(AuthGuard)
+  async removeFromFavoriteArticle(
+    @User('id') currentUserId: number,
+    @Param('slug') slug: string,
+  ) {
+    return await this.articleService.removeFromFavoriteArticle(currentUserId, slug);
   }
 }

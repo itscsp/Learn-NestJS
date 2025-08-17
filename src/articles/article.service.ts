@@ -7,6 +7,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, Repository } from 'typeorm';
 import slugify from 'slugify';
+import { ArticlesResponse } from '@/src/articles/types/articlesResponse.interface';
 
 @Injectable()
 export class ArticleServices {
@@ -17,7 +18,12 @@ export class ArticleServices {
     private readonly userRepositry: Repository<UserEntity>,
   ) {}
 
-  async findAll(query: { tag?: string; author?: string }) {
+  async findAll(query: {
+    tag?: string;
+    author?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<ArticlesResponse> {
     const queryBuilder = this.articleRepository
       .createQueryBuilder('articles')
       .leftJoinAndSelect('articles.author', 'author');
@@ -36,7 +42,7 @@ export class ArticleServices {
       });
 
       if (!author) {
-        return { article: [], articleCount: 0 };
+        return { articles: [], articleCount: 0 };
       }
 
       queryBuilder.andWhere('articles.authorId = :id', {
@@ -45,12 +51,20 @@ export class ArticleServices {
     }
 
     queryBuilder.orderBy('articles.createdAt', 'DESC');
-
-    const article = await queryBuilder.getMany();
     const articleCount = await queryBuilder.getCount();
 
+    if (query.limit) {
+      queryBuilder.limit(query.limit);
+    }
+
+    if (query.offset) {
+      queryBuilder.offset(query.offset);
+    }
+
+    const articles = await queryBuilder.getMany();
+
     return {
-      article,
+      articles,
       articleCount,
     };
   }
@@ -120,6 +134,56 @@ export class ArticleServices {
     Object.assign(article, updateArticleDto);
 
     return await this.articleRepository.save(article);
+  }
+
+  async addToFavoriteArticle(currentUserId: number, slug: string) {
+    const user = await this.userRepositry.findOne({
+      where: { id: currentUserId },
+      relations: ['favorites'],
+    });
+
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    const article = await this.findBySlug(slug);
+
+    const alreadyFavorited = (user.favorites || []).some(
+      (fav) => fav.id === article.id,
+    );
+
+    if (!alreadyFavorited) {
+      user.favorites = [...(user.favorites || []), article];
+      await this.userRepositry.save(user);
+
+      article.favoriteCount = (article.favoriteCount || 0) + 1;
+      await this.articleRepository.save(article);
+    }
+
+    return this.generateArticleResponse(article);
+  }
+
+  async removeFromFavoriteArticle(currentUserId: number, slug: string) {
+    const user = await this.userRepositry.findOne({
+      where: { id: currentUserId },
+      relations: ['favorites'],
+    });
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    const article = await this.findBySlug(slug);
+
+    const isFavorite = (user.favorites || []).some((fav) => fav.id === article.id);
+    if (isFavorite) {
+      user.favorites = (user.favorites || []).filter((fav) => fav.id !== article.id);
+      await this.userRepositry.save(user);
+
+      article.favoriteCount = Math.max(0, (article.favoriteCount || 0) - 1);
+      await this.articleRepository.save(article);
+    }
+
+    return this.generateArticleResponse(article);
   }
 
   generateSlug(title: string): string {
